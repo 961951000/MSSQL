@@ -104,6 +104,7 @@ namespace MSSQL
                 sb.Append(className);
                 sb.Append("\r\n\t{\r\n");
                 sb.Append("\t\t#region Model\r\n");
+                var order = 0;
                 foreach (var column in columns)
                 {
                     var propertieName = string.Empty;
@@ -121,6 +122,10 @@ namespace MSSQL
                     {
                         propertieName = column.字段名.Substring(0, 1).ToUpper() + column.字段名.Substring(1);
                     }
+                    if (propertieName == className)
+                    {
+                        propertieName = $"_{propertieName}";
+                    }
                     if (!string.IsNullOrEmpty(column.字段说明))
                     {
                         sb.Append("\t\t/// <summary>\r\n");
@@ -129,7 +134,8 @@ namespace MSSQL
                     }
                     if (!string.IsNullOrEmpty(column.主键))
                     {
-                        sb.Append("\t\t[Key, Column(\"").Append(column.字段名).Append("\")]\r\n");
+                        sb.Append("\t\t[Key, Column(\"").Append(column.字段名).Append("\", Order = ").Append(order).Append(")]\r\n");
+                        order++;
                     }
                     else
                     {
