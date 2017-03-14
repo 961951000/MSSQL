@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
+    </startup>
+  <connectionStrings>
+    <add name="DefaultConnection" connectionString="Data Source=192.168.100.212;Initial Catalog=Atm;User Id=sa;Password=123@abc;" />
+  </connectionStrings>
+  <appSettings>
+    <!--模型命名空间-->
+    <add key="modelnamespace" value="ExpressDelivery.Models"/>
+    <!--模型输出路径-->
+    <add key="modelpath" value="F:\项目\SmartLibrary\SmartLibrary\LibraryAtm\LibraryAtm\Models"/>    
+  </appSettings>
+</configuration>
