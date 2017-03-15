@@ -6,6 +6,7 @@ namespace MSSQL
     {
         static void Main(string[] args)
         {
+            AutoCreateModels.Start();
             Console.WriteLine("MSSQL");
             Console.ReadLine();
         }

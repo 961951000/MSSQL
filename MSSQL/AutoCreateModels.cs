@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MSSQL.Models;
 
 namespace MSSQL
 {
@@ -25,7 +26,7 @@ namespace MSSQL
                 var dict = new Dictionary<string, List<Dict>>();
                 foreach (var tableName in tableNames)
                 {
-                    const string sql = "SELECT 表名 = d.name,表说明 = isnull(f.value,''),字段序号 = a.colorder,字段名 = a.name,标识 = case when COLUMNPROPERTY( a.id,a.name,'IsIdentity')=1 then '√'else '' end,主键 = case when exists(SELECT 1 FROM sysobjects where xtype='PK' and parent_obj=a.id and name in (SELECT name FROM sysindexes WHERE indid in( SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid))) then '√' else '' end,类型 = b.name,占用字节数 = a.length,长度 = COLUMNPROPERTY(a.id,a.name,'PRECISION'),小数位数   = isnull(COLUMNPROPERTY(a.id,a.name,'Scale'),0),允许空 = case when a.isnullable=1 then '√'else '' end,默认值 = isnull(e.text,''),字段说明 = isnull(g.[value],'') FROM syscolumns a left join systypes b on a.xusertype=b.xusertype inner join sysobjects d on a.id=d.id  and d.xtype='U' and  d.name<>'dtproperties' left join syscomments e on a.cdefault=e.id left join sys.extended_properties g on a.id=G.major_id and a.colid=g.minor_id left join sys.extended_properties f on d.id=f.major_id and f.minor_id=0 where d.name= @tableName order by a.id,a.colorder;";
+                    const string sql = "SELECT 表名 = d.name,表说明 = isnull(f.value,''),字段序号 = a.colorder,字段名 = a.name,标识 = case when COLUMNPROPERTY( a.id,a.name,'IsIdentity')=1 then '√'else '' end,主键 = case when exists(SELECT 1 FROM sysobjects where xtype='PK' and parent_obj=a.id and name in (SELECT name FROM sysindexes WHERE indid in( SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid))) then '√' else '' end,类型 = b.name,占用字节数 = a.length,长度 = COLUMNPROPERTY(a.id,a.name,'PRECISION'),小数位数   = isnull(COLUMNPROPERTY(a.id,a.name,'Scale'),0),允许空 = case when a.isnullable=1 then '√'else '' end,默认值 = isnull(e.text,''),字段说明 = isnull(g.[value],'') FROM syscolumns a left join systypes b on a.xusertype=b.xusertype inner join sysobjects d on a.id=d.id  and d.xtype='U' left join syscomments e on a.cdefault=e.id left join sys.extended_properties g on a.id=G.major_id and a.colid=g.minor_id left join sys.extended_properties f on d.id=f.major_id and f.minor_id=0 where d.name= @tableName order by a.id,a.colorder;";
                     var columns = db.Query<Dict>(sql, new { tableName = tableName }).ToList();
                     dict.Add(tableName, columns);
                 }
@@ -43,27 +44,14 @@ namespace MSSQL
         private static int CreateModel(Dictionary<string, List<Dict>> dict)
         {
             var space = ConfigurationManager.AppSettings["modelnamespace"];
-            var modelsPath = ConfigurationManager.AppSettings["modelpath"];
-            if (!BaseTool.IsValidPath(modelsPath))
+            var modelsPath = ConfigurationManager.AppSettings["path"];
+            if (string.IsNullOrEmpty(space))
             {
-                #region 应用程序路径
-                var appPath = AppDomain.CurrentDomain.BaseDirectory;
-                for (var i = 0; i < 2; i++)
-                {
-                    var sb = new StringBuilder();
-                    var list = appPath.Split('\\').ToList();
-                    list.Remove("");
-                    list.RemoveAt(list.Count - 1);
-                    foreach (var str in list)
-                    {
-                        sb.Append(str).Append("\\");
-                    }
-                    appPath = sb.ToString();
-                }
-                #endregion
-                var arr = appPath.Split('\\');
-                space = $"{arr[arr.Length - 2]}.Models";
-                modelsPath = Path.Combine(@appPath, "Models");
+                space = "Default.Models";
+            }
+            if (string.IsNullOrEmpty(modelsPath) || !BaseTool.IsValidPath(modelsPath))
+            {
+                modelsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Models");
             }
             if (!Directory.Exists(modelsPath))
             {
@@ -88,6 +76,11 @@ namespace MSSQL
                 else
                 {
                     className = tableName.Key.Substring(0, 1).ToUpper() + tableName.Key.Substring(1);
+                }
+                var firstLetter = className.Substring(0, 1);
+                if (firstLetter != "_" && !RegexTool.IsLetter(firstLetter))
+                {
+                    className = $"_{className}";
                 }
                 sb.Append("using System;\r\nusing System.ComponentModel.DataAnnotations;\r\nusing System.ComponentModel.DataAnnotations.Schema;\r\n\r\nnamespace ");
                 sb.Append(space);
@@ -125,6 +118,18 @@ namespace MSSQL
                     if (propertieName == className)
                     {
                         propertieName = $"_{propertieName}";
+                    }
+                    else
+                    {
+                        firstLetter = propertieName.Substring(0, 1);
+                        if (firstLetter != "_" && !RegexTool.IsLetter(firstLetter))
+                        {
+                            propertieName = $"_{propertieName}";
+                            if (propertieName == className)
+                            {
+                                propertieName = $"_{propertieName}";
+                            }
+                        }
                     }
                     if (!string.IsNullOrEmpty(column.字段说明))
                     {
@@ -230,7 +235,10 @@ namespace MSSQL
                     sb1.Append(propertieName);
                     sb1.Append(" + \",");
                 }
-                sb1.Remove(sb1.Length - 5, 5);
+                if (sb1.Length >= 5)
+                {
+                    sb1.Remove(sb1.Length - 5, 5);
+                }
                 sb.Append("\t\tpublic override string ToString()\r\n");
                 sb.Append("\t\t{\r\n");
                 sb.Append("\t\t\treturn \"");
@@ -240,7 +248,7 @@ namespace MSSQL
                 sb.Append("\t\t}\r\n");
                 sb.Append("\t\t#endregion Model\r\n");
                 sb.Append("\t}\r\n").Append("}");
-                var filePath = Path.Combine(modelsPath, string.Format("{0}.cs", className));
+                var filePath = Path.Combine(modelsPath, $"{className}.cs");
                 if (WriteFile(filePath, sb.ToString()))
                 {
                     count++;
@@ -290,21 +298,5 @@ namespace MSSQL
             }
             return flag;
         }
-    }
-    internal class Dict
-    {
-        public string 表名 { get; set; }
-        public string 表说明 { get; set; }
-        public int? 字段序号 { get; set; }
-        public string 字段名 { get; set; }
-        public string 标识 { get; set; }
-        public string 主键 { get; set; }
-        public string 类型 { get; set; }
-        public int? 占用字节数 { get; set; }
-        public int? 长度 { get; set; }
-        public int? 小数位数 { get; set; }
-        public string 允许空 { get; set; }
-        public string 默认值 { get; set; }
-        public string 字段说明 { get; set; }
     }
 }

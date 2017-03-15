@@ -61,10 +61,12 @@
   <ItemGroup>
     <Compile Include="AutoCreateModels.cs" />
     <Compile Include="AutoDictionary.cs" />
+    <Compile Include="Models\Dict.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BaseTool.cs" />
     <Compile Include="Util\Loger.cs" />
+    <Compile Include="Util\RegexTool.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -76,6 +78,7 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

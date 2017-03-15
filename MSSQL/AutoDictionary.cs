@@ -8,12 +8,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using MSSQL.Models;
+using MSSQL.Util;
 
 namespace MSSQL
 {
     public class AutoDictionary
     {
-        private static string _path = AppDomain.CurrentDomain.BaseDirectory;
+        private static string _path = ConfigurationManager.AppSettings["path"];
         /// <summary>
         /// 程序启动
         /// </summary>
@@ -30,20 +32,12 @@ namespace MSSQL
                     var columns = db.Query<Dict>(sql, new { tableName = tableName }).ToList();
                     dict.Add(tableName, columns);
                 }
-                #region 设置路径           
-                for (var i = 0; i < 2; i++)
+                #region 设置路径      
+                if (string.IsNullOrEmpty(_path) || !BaseTool.IsValidPath(_path))
                 {
-                    var sb = new StringBuilder();
-                    var list = _path.Split('\\').ToList();
-                    list.Remove("");
-                    list.RemoveAt(list.Count - 1);
-                    foreach (var str in list)
-                    {
-                        sb.Append(str).Append("\\");
-                    }
-                    _path = sb.ToString();
+                    _path = AppDomain.CurrentDomain.BaseDirectory;
                 }
-                _path += db.Database + ".xlsx";
+                _path= Path.Combine(_path, $"{db.Database}.xlsx");
                 #endregion
                 GeneratedForm(dict);
             }
@@ -164,22 +158,6 @@ namespace MSSQL
                 app = null;
                 GC.Collect();
             }
-        }
-        internal class Dict
-        {
-            public string 表名 { get; set; }
-            public string 表说明 { get; set; }
-            public int? 字段序号 { get; set; }
-            public string 字段名 { get; set; }
-            public string 标识 { get; set; }
-            public string 主键 { get; set; }
-            public string 类型 { get; set; }
-            public int? 占用字节数 { get; set; }
-            public int? 长度 { get; set; }
-            public int? 小数位数 { get; set; }
-            public string 允许空 { get; set; }
-            public string 默认值 { get; set; }
-            public string 字段说明 { get; set; }
         }
     }
 }
