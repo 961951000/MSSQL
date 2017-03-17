@@ -69,7 +69,7 @@ namespace MSSQL
                     {
                         if (!string.IsNullOrEmpty(str))
                         {
-                            className += str.Substring(0, 1).ToUpper() + str.Substring(1);
+                            className += str.Substring(0, 1).ToUpper() + str.Substring(1).ToLower();
                         }
                     }
                 }
@@ -107,13 +107,13 @@ namespace MSSQL
                         {
                             if (!string.IsNullOrEmpty(str))
                             {
-                                propertieName += str.Substring(0, 1).ToUpper() + str.Substring(1);
+                                propertieName += str.Substring(0, 1).ToUpper() + str.Substring(1).ToLower();
                             }
                         }
                     }
                     else
                     {
-                        propertieName = column.字段名.Substring(0, 1).ToUpper() + column.字段名.Substring(1);
+                        propertieName = column.字段名.Substring(0, 1).ToUpper() + column.字段名.Substring(1).ToLower();
                     }
                     if (propertieName == className)
                     {
