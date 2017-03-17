@@ -75,7 +75,7 @@ namespace MSSQL
                 }
                 else
                 {
-                    className = tableName.Key.Substring(0, 1).ToUpper() + tableName.Key.Substring(1);
+                    className = tableName.Key.Substring(0, 1).ToUpper() + tableName.Key.Substring(1).ToLower();
                 }
                 var firstLetter = className.Substring(0, 1);
                 if (firstLetter != "_" && !RegexTool.IsLetter(firstLetter))
